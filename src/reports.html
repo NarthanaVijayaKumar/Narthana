@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visitor Reports</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <div class="header">
+        <h1>📊 Visitor Reports</h1>
+        <p>Track visitor activity and status trends</p>
+    </div>
+
+    <div class="report-overview">
+        <div class="overview-card primary">
+            <h3>Total Visitors</h3>
+            <h2 id="totalVisitorsCount">00</h2>
+            <p>All visits recorded</p>
+        </div>
+
+        <div class="overview-card blue">
+            <h3>Today's Visitors</h3>
+            <h2 id="todayVisitorsCount">00</h2>
+            <p>Registered today</p>
+        </div>
+
+        <div class="overview-card green">
+            <h3>Checked In</h3>
+            <h2 id="checkedInCount">00</h2>
+            <p>Currently inside</p>
+        </div>
+
+        <div class="overview-card orange">
+            <h3>Checked Out</h3>
+            <h2 id="checkedOutCount">00</h2>
+            <p>Completed visits</p>
+        </div>
+    </div>
+
+    <div class="report-panels">
+        <div class="panel">
+            <h3>Status Breakdown</h3>
+            <div class="status-row">
+                <span>Pending</span>
+                <div class="status-track"><div id="pendingBar" class="status-fill pending"></div></div>
+                <strong id="pendingBarValue">0%</strong>
+            </div>
+            <div class="status-row">
+                <span>Checked In</span>
+                <div class="status-track"><div id="checkedInBar" class="status-fill checked-in"></div></div>
+                <strong id="checkedInBarValue">0%</strong>
+            </div>
+            <div class="status-row">
+                <span>Checked Out</span>
+                <div class="status-track"><div id="checkedOutBar" class="status-fill checked-out"></div></div>
+                <strong id="checkedOutBarValue">0%</strong>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>Recent Activity</h3>
+            <ul id="recentActivityList" class="activity-list"></ul>
+        </div>
+    </div>
+
+    <div class="reports-toolbar">
+        <label>
+            Status
+            <select id="statusReportFilter">
+                <option value="all">All</option>
+                <option value="pending">Pending</option>
+                <option value="checked-in">Checked In</option>
+                <option value="checked-out">Checked Out</option>
+            </select>
+        </label>
+
+        <label>
+            Date
+            <input type="date" id="dateReportFilter">
+        </label>
+
+        <button type="button" id="clearReportFiltersBtn">Clear Filters</button>
+    </div>
+
+    <table class="visitor-table reports-table">
+        <thead>
+            <tr>
+                <th>Visitor Name</th>
+                <th>Mobile</th>
+                <th>Email</th>
+                <th>Purpose</th>
+                <th>Person to Meet</th>
+                <th>Visit Date</th>
+                <th>Time In</th>
+                <th>Status</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+            </tr>
+        </thead>
+        <tbody id="reportsTableBody"></tbody>
+    </table>
+
+    <br>
+
+    <button onclick="location.href='dashboard.html'">
+        ← Back to Dashboard
+    </button>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

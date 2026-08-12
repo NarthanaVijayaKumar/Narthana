@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Account</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="login-box">
+    <h2>Create Account</h2>
+
+    <form id="registerForm">
+        <label>Username</label>
+        <input id="registerUsername" type="text" placeholder="Choose Username" required>
+
+        <label>Password</label>
+        <input id="registerPassword" type="password" placeholder="Choose Password" required>
+
+        <label>Access Code</label>
+        <input id="institutionId" type="password" placeholder="Enter Access Code" required>
+
+        <label>Account Type</label>
+        <select id="accountRole" required>
+            <option value="student">Student</option>
+            <option value="staff">Staff</option>
+        </select>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <br>
+    <a href="login.html">
+        <button type="button">← Back to Login</button>
+    </a>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

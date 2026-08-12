@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register Visitor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <div class="header">
+        <h1>📝 Register Visitor</h1>
+        <p>Enter visitor details to create a new visitor record</p>
+    </div>
+
+    <form id="visitorForm">
+
+        <label>Visitor Name</label>
+        <input type="text" id="visitorName" placeholder="Enter Visitor Name" required>
+
+        <label>Mobile Number</label>
+        <input type="tel" id="mobile" placeholder="Enter Mobile Number" required>
+
+        <label>Email ID <span style="color:red;">*</span></label>
+        <input type="email" id="email" placeholder="Enter Email ID" required>
+
+        <label>Purpose of Visit</label>
+        <input type="text" id="purpose" placeholder="Enter Purpose" required>
+
+        <label>Person to Meet</label>
+        <input type="text" id="person" placeholder="Enter Person Name" required>
+
+        <label>Date</label>
+        <input type="date" id="date" required>
+
+        <label>Time In</label>
+        <input type="time" id="time" required>
+
+        <button type="submit">✅ Register Visitor</button>
+
+    </form>
+
+    <br>
+
+    <button onclick="location.href='dashboard.html'">
+        ← Back to Dashboard
+    </button>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <div class="header">
+        <div class="profile-wrapper">
+            <button class="profile-icon" id="profileIcon" type="button" aria-label="User profile">👤</button>
+            <div class="profile-dropdown" id="profileDropdown">
+                <p><strong>Logged In As</strong></p>
+                <p id="profileUsername">-</p>
+                <button type="button" id="logoutBtn">Logout</button>
+            </div>
+        </div>
+        <h1>Digital Visitor Entry & Gate Pass Management System</h1>
+        <p>Welcome, Security Staff 👋</p>
+    </div>
+
+    <div class="summary">
+
+        <div class="card">
+            <h3>Today's Visitors</h3>
+            <h2>15</h2>
+        </div>
+
+        <div class="card">
+            <h3>Inside Campus</h3>
+            <h2>08</h2>
+        </div>
+
+        <div class="card">
+            <h3>Checked Out</h3>
+            <h2>07</h2>
+        </div>
+
+        <div class="card">
+            <h3>Pending Approval</h3>
+            <h2>02</h2>
+        </div>
+
+    </div>
+
+    <div class="menu" id="dashboardMenu">
+        <a href="register.html" id="registerMenuItem">
+            <button>📝 Register Visitor</button>
+        </a>
+        <a href="records.html" id="recordsMenuItem">
+            <button>📋 Visitor Records</button>
+        </a>
+
+        <a href="gate-pass.html" id="gatePassMenuItem">
+            <button id="generateGatePassBtn" type="button">🎫 Generate Gate Pass</button>
+        </a>
+
+        <a href="check-status.html" id="checkStatusMenuItem">
+            <button id="toggleCheckStatusBtn" type="button">🔄 Check-In / Check-Out</button>
+        </a>
+
+        <a href="reports.html" target="_blank" rel="noopener noreferrer" id="reportsMenuItem">
+            <button type="button">📊 Reports</button>
+        </a>
+
+        <button onclick="location.href='login.html'">🚪 Logout</button>
+    </div>
+
+    <div id="gatePassOutput" class="gate-pass-card" style="display:none;"></div>
+
+    <div id="gatePassActions" class="gate-pass-actions" style="display:none;">
+        <button id="printGatePassBtn" type="button">🖨️ Print Pass</button>
+        <button id="downloadGatePassBtn" type="button">⬇️ Download Pass</button>
+    </div>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

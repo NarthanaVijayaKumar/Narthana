@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Generate Gate Pass</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="header">
+        <h1>🎫 Generate Gate Pass</h1>
+        <p>Enter the visitor name and generate the gate pass</p>
+    </div>
+
+    <div class="gate-pass-panel">
+        <label for="visitorNameInput">Visitor Name</label>
+        <input type="text" id="visitorNameInput" placeholder="Type visitor name">
+        <button id="generateGatePassBtn" type="button">🎫 Generate Gate Pass</button>
+    </div>
+
+    <div id="gatePassOutput" class="gate-pass-card" style="display:none;"></div>
+
+    <div id="gatePassActions" class="gate-pass-actions" style="display:none;">
+        <button id="printGatePassBtn" type="button">🖨️ Print Pass</button>
+        <button id="downloadGatePassBtn" type="button">⬇️ Download Pass</button>
+    </div>
+
+    <br>
+
+    <button onclick="location.href='dashboard.html'">← Back to Dashboard</button>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

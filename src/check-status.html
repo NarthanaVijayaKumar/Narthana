@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check In / Check Out</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="dashboard-container">
+
+    <div class="header">
+        <h1>🔄 Check In / Check Out</h1>
+        <p>Update visitor status</p>
+    </div>
+
+    <div class="gate-pass-panel">
+        <label for="checkVisitorName">Visitor Name</label>
+        <input type="text" id="checkVisitorName" placeholder="Type visitor name">
+
+        <label for="checkStatusDate">Date</label>
+        <input type="date" id="checkStatusDate" required>
+
+        <label for="checkStatusTime">Time</label>
+        <input type="time" id="checkStatusTime" required>
+
+        <div class="gate-pass-actions" style="margin-top:10px;">
+            <button id="checkInBtn" type="button">✅ Check In</button>
+            <button id="checkOutBtn" type="button">🚪 Check Out</button>
+        </div>
+    </div>
+
+    <br>
+
+    <button onclick="location.href='dashboard.html'">← Back to Dashboard</button>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>

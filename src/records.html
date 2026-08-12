@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Visitor Records</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+    <div class="header">
+        <h1>📋 Visitor Records</h1>
+        <p>View and manage registered visitors</p>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="emailFilter" placeholder="🔍 Enter Mobile or Email">
+        <button type="button" onclick="filterVisitorsByEmail()">Search</button>
+    </div>
+
+    <table class="visitor-table">
+        <thead>
+            <tr>
+                <th>Visitor Name</th>
+                <th>Mobile</th>
+                <th>Email</th>
+                <th>Purpose</th>
+                <th>Person to Meet</th>
+                <th>Date</th>
+                <th>Time In</th>
+                <th>Status</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+            </tr>
+        </thead>
+
+        <tbody id="visitorData"></tbody>
+    </table>
+
+    <br>
+
+    <button onclick="location.href='dashboard.html'">
+        ← Back to Dashboard
+    </button>
+
+</div>
+
+<script>
+
+function formatVisitorDateTime(value, fallback) {
+    if (!value) {
+        return fallback || "-";
+    }
+
+    let parsedDate = new Date(value);
+    if (Number.isNaN(parsedDate.getTime())) {
+        return value;
+    }
+
+    return parsedDate.toLocaleString();
+}
+
+function getCheckInDisplayValue(visitor) {
+    if (visitor.checkInDisplay) {
+        return visitor.checkInDisplay;
+    }
+
+    const fallbackValue = [visitor.checkInDate, visitor.checkInTime].filter(Boolean).join(" ");
+    return formatVisitorDateTime(visitor.checkInDateTime, fallbackValue || "-");
+}
+
+function getCheckOutDisplayValue(visitor) {
+    if (visitor.checkOutDisplay) {
+        return visitor.checkOutDisplay;
+    }
+
+    const fallbackValue = [visitor.checkOutDate, visitor.checkOutTime].filter(Boolean).join(" ");
+    return formatVisitorDateTime(visitor.checkOutDateTime, fallbackValue || "-");
+}
+
+function displayVisitors(visitors) {
+
+    let table = document.getElementById("visitorData");
+
+    table.innerHTML = "";
+
+    visitors.forEach(function(visitor) {
+
+        let row = table.insertRow();
+
+        row.insertCell(0).textContent = visitor.name;
+        row.insertCell(1).textContent = visitor.mobile;
+        row.insertCell(2).textContent = visitor.email || "-";
+        row.insertCell(3).textContent = visitor.purpose;
+        row.insertCell(4).textContent = visitor.person;
+        row.insertCell(5).textContent = visitor.date;
+        row.insertCell(6).textContent = visitor.time;
+        row.insertCell(7).textContent = visitor.status ? visitor.status.replace("-", " ") : "Pending";
+        row.insertCell(8).textContent = getCheckInDisplayValue(visitor);
+        row.insertCell(9).textContent = getCheckOutDisplayValue(visitor);
+    });
+}
+
+function refreshRecordsPage() {
+    let visitors = JSON.parse(localStorage.getItem("visitors")) || [];
+    let filterValue = document.getElementById("emailFilter").value.trim().toLowerCase();
+
+    let filteredVisitors = visitors.filter(function(visitor) {
+        if (!filterValue) {
+            return true;
+        }
+
+        let emailMatch = visitor.email && visitor.email.toLowerCase().includes(filterValue);
+        let mobileMatch = visitor.mobile && visitor.mobile.toLowerCase().includes(filterValue);
+        return emailMatch || mobileMatch;
+    });
+
+    displayVisitors(filteredVisitors);
+}
+
+function filterVisitorsByEmail() {
+    refreshRecordsPage();
+}
+
+window.addEventListener("visitorsUpdated", refreshRecordsPage);
+window.addEventListener("storage", function (event) {
+    // Refresh on any storage change so records reflect updates immediately
+    refreshRecordsPage();
+});
+window.addEventListener("focus", refreshRecordsPage);
+window.addEventListener("pageshow", refreshRecordsPage);
+document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) {
+        refreshRecordsPage();
+    }
+});
+document.addEventListener("DOMContentLoaded", refreshRecordsPage);
+
+</script>
+<script src="script.js"></script>
+</body>
+</html>

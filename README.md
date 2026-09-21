@@ -1,5 +1,6 @@
 # Narthana
 
+<<<<<<< HEAD
 ## Backend setup with MySQL
 
 1. Install dependencies:
@@ -20,3 +21,8 @@
    ```
 
 The server will automatically create the specified database and the required `users` and `visitors` tables if they do not exist.
+=======
+## Login OTP email
+
+Copy `.env.example` to `.env` and set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, and `SMTP_FROM`. Set `SMTP_FROM_NAME` to control the sender name shown for OTP emails; it defaults to `JJCET INSTITUTION`. The Login page sends a six-digit OTP to the entered account email after the email, password, and role are verified.
+>>>>>>> 0e5e44e (Initial commit)

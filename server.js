@@ -1,6 +1,12 @@
 const express = require('express');
 const path = require('path');
+<<<<<<< HEAD
 const mysql = require('mysql2/promise');
+=======
+const fs = require('fs');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
+>>>>>>> 0e5e44e (Initial commit)
 require('dotenv').config();
 
 const app = express();
@@ -16,6 +22,7 @@ let pool;
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'src')));
 
+<<<<<<< HEAD
 async function initializeDatabase() {
   try {
     const rootConnection = await mysql.createConnection({
@@ -80,6 +87,73 @@ async function initializeDatabase() {
   } catch (err) {
     console.error('Database initialization failed:', err);
     throw err;
+=======
+const DB_FILE = path.join(__dirname, 'db.json');
+const otpChallenges = new Map();
+
+function createMailTransport() {
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT || 587),
+    secure: process.env.SMTP_SECURE === 'true',
+    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+  });
+}
+
+async function sendLoginOtp(email, otp) {
+  const mailTransport = createMailTransport();
+  if (!mailTransport) {
+    return false;
+  }
+
+  await mailTransport.sendMail({
+    from: {
+      name: process.env.SMTP_FROM_NAME || 'JJCET INSTITUTION',
+      address: process.env.SMTP_FROM || process.env.SMTP_USER
+    },
+    to: email,
+    subject: 'Your login OTP',
+    text: `Your login OTP is ${otp}. It expires in 5 minutes.`
+  });
+  return true;
+}
+
+function loadData() {
+  try {
+    if (fs.existsSync(DB_FILE)) {
+      const raw = fs.readFileSync(DB_FILE, 'utf8');
+      const data = JSON.parse(raw || '{}');
+      return {
+          users: Array.isArray(data.users) && data.users.length ? data.users : [
+            { username: 'admin', email: '', password: 'admin123', role: 'staff' },
+            { username: 'student', email: '', password: 'student123', role: 'student' }
+        ],
+        visitors: Array.isArray(data.visitors) ? data.visitors : []
+      };
+    }
+  } catch (err) {
+    console.error('Failed to load DB file:', err);
+  }
+
+  return {
+    users: [
+      { username: 'admin', email: '', password: 'admin123', role: 'staff' },
+      { username: 'student', email: '', password: 'student123', role: 'student' }
+    ],
+    visitors: []
+  };
+}
+
+function saveData(data) {
+  try {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2), 'utf8');
+  } catch (err) {
+    console.error('Failed to write DB file:', err);
+>>>>>>> 0e5e44e (Initial commit)
   }
 }
 
@@ -101,11 +175,20 @@ app.get('/api/users', async (req, res) => {
   }
 });
 
+<<<<<<< HEAD
 app.post('/api/users/register', async (req, res) => {
   const { username, password, institutionId, role } = req.body;
+=======
+app.post('/api/users/register', (req, res) => {
+  const { username, email, password, institutionId, role } = req.body;
+>>>>>>> 0e5e44e (Initial commit)
 
-  if (!username || !password || !institutionId) {
-    return res.status(400).json({ message: 'Username, password and institution ID are required' });
+  if (!username || !email || !password || !institutionId) {
+    return res.status(400).json({ message: 'Username, email Id, password and institution ID are required' });
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.com$/.test(email)) {
+    return res.status(400).json({ message: 'Enter valid email address' });
   }
 
   if (institutionId.toUpperCase() !== 'JJCET') {
@@ -118,6 +201,7 @@ app.post('/api/users/register', async (req, res) => {
       return res.status(409).json({ message: 'Username already exists' });
     }
 
+<<<<<<< HEAD
     await pool.query(
       'INSERT INTO users (username, password, institutionId, role) VALUES (?, ?, ?, ?)',
       [username, password, institutionId, role || 'staff']
@@ -150,6 +234,66 @@ app.post('/api/users/login', async (req, res) => {
   } catch (err) {
     handleServerError(res, err, 'Failed to authenticate user');
   }
+=======
+  const exists = users.some((user) => user.username.toLowerCase() === username.toLowerCase() || (user.email && user.email.toLowerCase() === email.toLowerCase()));
+  if (exists) {
+    return res.status(409).json({ message: 'Username or email already exists' });
+  }
+
+  const newUser = { username, email, password, institutionId, role: role || 'staff' };
+  users.push(newUser);
+  saveData({ users, visitors: db.visitors });
+  res.status(201).json({ message: 'Registration successful' });
+});
+
+app.post('/api/users/login', (req, res) => {
+  res.status(401).json({ message: 'OTP validation is required. Request an OTP first.' });
+});
+
+app.post('/api/users/request-otp', async (req, res) => {
+  const { username, password, role } = req.body;
+
+  const db = loadData();
+  const user = db.users.find((entry) => entry.username.toLowerCase() === String(username || '').toLowerCase() && entry.password === password && entry.role === role);
+
+  if (!user) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+
+  if (!user.email || !/^[^\s@]+@[^\s@]+\.com$/.test(user.email)) {
+    return res.status(400).json({ message: 'No valid email address is registered for this username.' });
+  }
+
+  const otp = String(crypto.randomInt(100000, 1000000));
+  const challengeId = crypto.randomUUID();
+
+  try {
+    if (!await sendLoginOtp(user.email, otp)) {
+      return res.status(503).json({ message: 'Email service is not configured. Configure SMTP to receive OTP.' });
+    }
+  } catch (error) {
+    console.error('Failed to send login OTP:', error);
+    if (error.code === 'EAUTH' || error.responseCode === 535) {
+      return res.status(502).json({ message: 'SMTP authentication failed. Check SMTP_USER and SMTP_PASS.' });
+    }
+    return res.status(502).json({ message: 'Unable to send OTP email.' });
+  }
+
+  otpChallenges.set(challengeId, { username: user.username, email: user.email, role, otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+  res.json({ message: 'OTP sent to your email address.', challengeId });
+});
+
+app.post('/api/users/verify-otp', (req, res) => {
+  const { username, role, otp, challengeId } = req.body;
+  const challenge = otpChallenges.get(challengeId);
+
+  if (!challenge || challenge.username.toLowerCase() !== String(username || '').toLowerCase() || challenge.role !== role || challenge.expiresAt < Date.now() || challenge.otp !== String(otp || '')) {
+    return res.status(401).json({ message: 'Invalid OTP Entered' });
+  }
+
+  otpChallenges.delete(challengeId);
+  res.json({ message: 'Login successful', user: { username: challenge.username, role } });
+>>>>>>> 0e5e44e (Initial commit)
 });
 
 app.get('/api/visitors', async (req, res) => {
@@ -198,6 +342,18 @@ app.post('/api/visitors', async (req, res) => {
   } catch (err) {
     handleServerError(res, err, 'Failed to register visitor');
   }
+<<<<<<< HEAD
+=======
+
+  const newVisitor = {
+    id: Date.now().toString(),
+    ...visitor,
+    status: visitor.status || 'pending'
+  };
+  visitors.push(newVisitor);
+  saveData({ users: db.users, visitors });
+  res.status(201).json({ message: 'Visitor registered', visitor: newVisitor });
+>>>>>>> 0e5e44e (Initial commit)
 });
 
 app.put('/api/visitors/:id', async (req, res) => {

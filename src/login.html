@@ -24,7 +24,13 @@
         <label>Password</label>
         <input id="loginPassword" type="password" placeholder="Enter Password" required>
 
-        <button type="submit">Login</button>
+        <div id="otpSection" hidden>
+            <label for="loginOtp">OTP</label>
+            <input id="loginOtp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="Enter OTP" maxlength="6">
+            <a id="resendOtpBtn" class="resend-otp-link" href="#">Resend OTP</a>
+        </div>
+
+        <button id="loginSubmitBtn" type="submit">Login</button>
     </form>
 
     <hr>

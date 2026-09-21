@@ -3,8 +3,15 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     const loginForm = document.getElementById("loginForm");
+    const loginOtpInput = document.getElementById("loginOtp");
+    const otpSection = document.getElementById("otpSection");
+    const loginSubmitBtn = document.getElementById("loginSubmitBtn");
+    const resendOtpBtn = document.getElementById("resendOtpBtn");
     const registerForm = document.getElementById("registerForm");
+    const registerEmailInput = document.getElementById("registerUsername");
+    const accountEmailInput = document.getElementById("registerEmail");
     const gatePassBtn = document.getElementById("generateGatePassBtn");
+    const gatePassList = document.getElementById("gatePassList");
     const profileIcon = document.getElementById("profileIcon");
     const profileDropdown = document.getElementById("profileDropdown");
     const profileUsername = document.getElementById("profileUsername");
@@ -23,6 +30,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const gatePassActions = document.getElementById("gatePassActions");
     const printGatePassBtn = document.getElementById("printGatePassBtn");
     const downloadGatePassBtn = document.getElementById("downloadGatePassBtn");
+
+    if (accountEmailInput) {
+        accountEmailInput.addEventListener("invalid", function () {
+            accountEmailInput.setCustomValidity("Enter valid email address");
+        });
+        accountEmailInput.addEventListener("input", function () {
+            accountEmailInput.setCustomValidity("");
+        });
+    }
 
     function updateVisitTimeConstraint() {
         if (!visitDateInput || !visitTimeInput) {
@@ -317,6 +333,37 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     if (loginForm) {
+        let otpRequested = false;
+        let otpChallengeId = "";
+
+        async function requestLoginOtp() {
+            let username = document.getElementById("loginUsername").value.trim();
+            let password = document.getElementById("loginPassword").value;
+            let role = document.getElementById("loginRole") ? document.getElementById("loginRole").value : "staff";
+
+            if (!loginForm.reportValidity()) {
+                return;
+            }
+
+            if (!role || (role !== "student" && role !== "staff")) {
+                throw new Error("Please select Student or Staff before logging in.");
+            }
+
+            const response = await apiRequest("/users/request-otp", {
+                method: "POST",
+                body: JSON.stringify({ username: username, password: password, role: role })
+            });
+
+            otpChallengeId = response.challengeId;
+            otpRequested = true;
+            otpSection.hidden = false;
+            loginOtpInput.required = true;
+            loginSubmitBtn.textContent = "Verify OTP";
+            loginOtpInput.value = "";
+            loginOtpInput.focus();
+            alert(response.message || "OTP sent to your email address.");
+        }
+
         loginForm.addEventListener("submit", async function (event) {
             event.preventDefault();
 
@@ -329,18 +376,44 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             try {
-                await apiRequest("/users/login", {
+                if (!otpRequested) {
+                    await requestLoginOtp();
+                    return;
+                }
+
+                await apiRequest("/users/verify-otp", {
                     method: "POST",
-                    body: JSON.stringify({ username: username, password: password, role: role })
+                    body: JSON.stringify({ username: username, role: role, otp: loginOtpInput.value.trim(), challengeId: otpChallengeId })
                 });
 
                 localStorage.setItem("loggedInUser", username);
                 localStorage.setItem("loggedInRole", role);
                 window.location.href = "dashboard.html";
             } catch (error) {
-                alert(error.message || "Invalid username, password, or selected role.");
+                alert(error.message || (otpRequested ? "Invalid OTP Entered" : "Invalid username, password, or selected role."));
             }
         });
+
+        if (resendOtpBtn) {
+            resendOtpBtn.addEventListener("click", async function (event) {
+                event.preventDefault();
+                if (resendOtpBtn.classList.contains("pending")) {
+                    return;
+                }
+
+                resendOtpBtn.classList.add("pending");
+                resendOtpBtn.setAttribute("aria-disabled", "true");
+
+                try {
+                    await requestLoginOtp();
+                } catch (error) {
+                    alert(error.message || "Unable to resend OTP.");
+                } finally {
+                    resendOtpBtn.classList.remove("pending");
+                    resendOtpBtn.removeAttribute("aria-disabled");
+                }
+            });
+        }
     }
 
     if (registerForm) {
@@ -348,12 +421,18 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault();
 
             let username = document.getElementById("registerUsername").value.trim();
+            let email = document.getElementById("registerEmail").value.trim();
             let password = document.getElementById("registerPassword").value;
             let institutionId = document.getElementById("institutionId") ? document.getElementById("institutionId").value.trim() : "";
             let accountRole = document.getElementById("accountRole") ? document.getElementById("accountRole").value : "staff";
 
-            if (!username || !password) {
-                alert("Please enter both username and password.");
+            if (!username || !email || !password) {
+                alert("Please enter username, email Id, and password.");
+                return;
+            }
+
+            if (!/^[^\s@]+@[^\s@]+\.com$/.test(email)) {
+                alert("Enter valid email address");
                 return;
             }
 
@@ -370,7 +449,7 @@ document.addEventListener("DOMContentLoaded", function () {
             try {
                 await apiRequest("/users/register", {
                     method: "POST",
-                    body: JSON.stringify({ username: username, password: password, institutionId: institutionId, role: accountRole })
+                    body: JSON.stringify({ username: username, email: email, password: password, institutionId: institutionId, role: accountRole })
                 });
 
                 alert("Registration successful. You can now log in.");
@@ -450,77 +529,88 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    if (gatePassBtn && gatePassOutput) {
+    function renderGatePassList() {
+        if (!gatePassList) {
+            return;
+        }
 
-        gatePassBtn.addEventListener("click", function () {
+        let visitors = getVisitorsFromStorage();
+        gatePassList.innerHTML = "";
 
-            let visitors = JSON.parse(localStorage.getItem("visitors")) || [];
-            let searchName = visitorNameInput ? visitorNameInput.value.trim().toLowerCase() : "";
+        if (!visitors.length) {
+            gatePassList.innerHTML = "<p>No visitors have been registered yet.</p>";
+            return;
+        }
 
-            if (!searchName) {
-                gatePassOutput.innerHTML = "<p>Please enter a visitor name first.</p>";
-                gatePassOutput.style.display = "block";
-                gatePassActions.style.display = "none";
+        let table = document.createElement("table");
+        table.className = "gate-pass-table";
+        table.innerHTML = "<thead><tr><th>Visitor Name</th><th>Email</th><th>Purpose</th><th>Visit Date</th><th>Gate Pass</th><th>Action</th></tr></thead>";
+        let tableBody = document.createElement("tbody");
+
+        visitors.forEach(function (visitor) {
+            let gatePass = visitor.gatePass || {
+                id: visitor.gatePassId,
+                issuedAt: visitor.gatePassIssuedAt
+            };
+            let row = tableBody.insertRow();
+            row.insertCell(0).textContent = visitor.name || "-";
+            row.insertCell(1).textContent = visitor.email || "-";
+            row.insertCell(2).textContent = visitor.purpose || "-";
+            row.insertCell(3).textContent = visitor.date || "-";
+            row.insertCell(4).textContent = gatePass.id || "Not generated";
+
+            let actionCell = row.insertCell(5);
+            let actionButton = document.createElement("button");
+            actionButton.type = "button";
+            actionButton.className = "generate-gate-pass-row-btn";
+            actionButton.dataset.visitorId = visitor.id;
+            actionButton.textContent = gatePass.id ? "Generated" : "Generate";
+            actionButton.disabled = Boolean(gatePass.id);
+            actionCell.appendChild(actionButton);
+        });
+
+        table.appendChild(tableBody);
+        gatePassList.appendChild(table);
+    }
+
+    if (gatePassList) {
+        gatePassList.addEventListener("click", async function (event) {
+            let generateButton = event.target.closest(".generate-gate-pass-row-btn");
+            if (!generateButton || generateButton.disabled) {
                 return;
             }
 
-            let visitor = visitors.find(function (existingVisitor) {
-                return existingVisitor.name && existingVisitor.name.toLowerCase().includes(searchName);
+            let visitors = getVisitorsFromStorage();
+            let visitor = visitors.find(function (item) {
+                return String(item.id) === String(generateButton.dataset.visitorId);
             });
 
             if (!visitor) {
-                gatePassOutput.innerHTML = "<p>No matching visitor found. Please check the name and try again.</p>";
-                gatePassOutput.style.display = "block";
-                gatePassActions.style.display = "none";
+                alert("Visitor not found.");
                 return;
             }
 
-            let gatePass = {
-                id: "GP-" + Date.now().toString().slice(-6),
-                issuedAt: new Date().toLocaleString(),
-                name: visitor.name,
-                mobile: visitor.mobile,
-                purpose: visitor.purpose,
-                person: visitor.person,
-                date: visitor.date,
-                time: visitor.time
-            };
+            let gatePassId = "GP-" + Date.now().toString().slice(-6);
+            let issuedAt = new Date().toISOString();
+            generateButton.disabled = true;
 
-            localStorage.setItem("generatedGatePass", JSON.stringify(gatePass));
-
-            gatePassOutput.innerHTML = `
-                <div class="gate-pass-header">Visitor Gate Pass</div>
-                <div class="gate-pass-body">
-                    <p><strong>Pass ID:</strong> ${gatePass.id}</p>
-                    <p><strong>Visitor Name:</strong> ${gatePass.name}</p>
-                    <p><strong>Mobile:</strong> ${gatePass.mobile}</p>
-                    <p><strong>Purpose:</strong> ${gatePass.purpose}</p>
-                    <p><strong>Person to Meet:</strong> ${gatePass.person}</p>
-                    <p><strong>Date:</strong> ${gatePass.date}</p>
-                    <p><strong>Time In:</strong> ${gatePass.time}</p>
-                </div>
-                <div class="gate-pass-footer">Generated on ${gatePass.issuedAt}</div>
-            `;
-            gatePassOutput.style.display = "block";
-            gatePassActions.style.display = "flex";
-
-            if (printGatePassBtn) {
-                printGatePassBtn.onclick = function () {
-                    printGeneratedGatePass();
-                };
-            }
-
-            if (downloadGatePassBtn) {
-                downloadGatePassBtn.onclick = function () {
-                    let content = gatePassOutput.innerHTML;
-                    let blob = new Blob([`<html><body style="font-family:Arial;padding:20px;">${content}</body></html>`], { type: "text/html" });
-                    let url = URL.createObjectURL(blob);
-                    let link = document.createElement("a");
-                    link.href = url;
-                    link.download = "gate-pass.html";
-                    link.click();
-                    URL.revokeObjectURL(url);
-                };
+            try {
+                let result = await apiRequest("/visitors/" + visitor.id, {
+                    method: "PUT",
+                    body: JSON.stringify({
+                        gatePass: { id: gatePassId, issuedAt: issuedAt },
+                        gatePassId: gatePassId,
+                        gatePassIssuedAt: issuedAt
+                    })
+                });
+                let savedVisitor = result && result.visitor ? result.visitor : visitor;
+                Object.assign(visitor, savedVisitor, { gatePass: { id: gatePassId, issuedAt: issuedAt } });
+                await saveVisitorsToStorage(visitors);
+                renderGatePassList();
+                alert("Gate pass generated successfully.");
+            } catch (error) {
+                generateButton.disabled = false;
+                alert(error.message || "Unable to generate gate pass.");
             }
         });
     }
@@ -531,6 +621,7 @@ document.addEventListener("DOMContentLoaded", function () {
         updateStatusSummary();
         renderReports();
         renderVisitorTable();
+        renderGatePassList();
     });
 
     window.addEventListener("storage", function (event) {
@@ -538,6 +629,7 @@ document.addEventListener("DOMContentLoaded", function () {
             updateStatusSummary();
             renderReports();
             renderVisitorTable();
+            renderGatePassList();
         }
     });
 
@@ -881,6 +973,7 @@ document.addEventListener("DOMContentLoaded", function () {
     loadVisitorsFromServer().then(function () {
         renderVisitorTable();
         updateStatusSummary();
+        renderGatePassList();
     });
 
 });

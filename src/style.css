@@ -96,6 +96,27 @@ input, select{
     background:#0d47a1;
 }
 
+.login-box a.resend-otp-link{
+    display:inline-block;
+    width:auto;
+    padding:0;
+    color:#1565c0;
+    font-size:14px;
+    text-decoration:underline;
+    cursor:pointer;
+    margin:0 0 10px;
+}
+
+.login-box a.resend-otp-link:hover{
+    color:#0d47a1;
+}
+
+.login-box a.resend-otp-link.pending{
+    color:#78909c;
+    cursor:wait;
+    pointer-events:none;
+}
+
 
 .login-box h3{
     margin:20px 0 10px;
@@ -352,6 +373,53 @@ input[type="time"]{
 
 .gate-pass-panel input{
     margin-bottom:10px;
+}
+
+.gate-pass-list{
+    display:grid;
+    gap:16px;
+    overflow-x:auto;
+}
+
+.gate-pass-table{
+    width:100%;
+    min-width:760px;
+    border-collapse:collapse;
+    background:white;
+}
+
+.gate-pass-table th,
+.gate-pass-table td{
+    padding:12px;
+    border-bottom:1px solid #ddd;
+    text-align:left;
+}
+
+.gate-pass-table th{
+    background:#1565c0;
+    color:white;
+}
+
+.gate-pass-table tr:hover{
+    background:#f5f9ff;
+}
+
+.generate-gate-pass-row-btn{
+    padding:8px 12px;
+    border:none;
+    border-radius:6px;
+    background:#1565c0;
+    color:white;
+    cursor:pointer;
+}
+
+.generate-gate-pass-row-btn:hover{
+    background:#0d47a1;
+}
+
+.generate-gate-pass-row-btn:disabled{
+    background:#90a4ae;
+    cursor:default;
 }
 
 .report-overview{
